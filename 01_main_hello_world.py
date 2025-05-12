@@ -6,6 +6,10 @@ from the robot joint
 
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 
+
+COPPELIA_SCENE_PATH = "/home/nikolas/UNIPV/robot-control-unipv/coppelia_scenes/ur5_scene.ttt"       # NOTE: you have to put the absolute path!
+
+
 if __name__=="__main__":
 
     client = RemoteAPIClient()
@@ -14,7 +18,7 @@ if __name__=="__main__":
 
     # Load the simulation scenario using the .ttt file 
     # NOTE: you have to put the absolute path!
-    sim.loadScene("/home/nikolas/UNIPV/robot-control-unipv/coppelia_scenes/ur5_scene.ttt")
+    sim.loadScene(COPPELIA_SCENE_PATH)
 
     # Setup some simulation settings 
     sim_duration = 5 # Simulation duration [s]

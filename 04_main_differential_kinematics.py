@@ -1,7 +1,7 @@
 
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
-from coppelia_utils import get_handles, get_joint_positions, get_joint_velocities, get_pose
-from robotics_utils import ur5_dh_params, forward_kinematics
+from coppelia_utils import get_handles, get_joint_positions, get_joint_velocities, get_pose, get_object_velocity
+from robotics_utils import ur5_dh_params, forward_kinematics, geometric_jacobian
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -26,7 +26,7 @@ if __name__=="__main__":
                    "/UR5/joint{4}", "/UR5/joint{5}"] 
     joint_handles = get_handles(sim=sim, names=joint_names)
     base_handle = get_handles(sim=sim, names=["/UR5"])[0]
-    ee_handle = get_handles(sim=sim, names=["/end_effector"])[0]
+    ee_handle = get_handles(sim=sim, names=["/UR5/link{5}"])[0]
 
     # Retrieve the pose of the robot base with respect to the world
     world_T_0 = get_pose(sim=sim, object_id=base_handle, respect_to=-1)
@@ -41,8 +41,8 @@ if __name__=="__main__":
     sim_history = {'time':np.zeros(sim_iterations),
                    'q':np.zeros((sim_iterations, len(joint_handles))),
                    'dq':np.zeros((sim_iterations, len(joint_handles))),
-                   'pos_err_norm':np.zeros(sim_iterations),
-                   'or_err_norm':np.zeros(sim_iterations)}
+                   'v_ee_dk':np.zeros((sim_iterations, 6)),
+                   'v_ee_coppelia':np.zeros((sim_iterations, 6))}
     
     # Start the simulation
     sim.startSimulation()
@@ -52,22 +52,22 @@ if __name__=="__main__":
         q = get_joint_positions(sim=sim, joint_handles=joint_handles)
         dq = get_joint_velocities(sim=sim, joint_handles=joint_handles)
 
-        # Retrieve the End-Effector pose from CoppeliaSim (for comparison only)
-        world_T_ee_coppelia = get_pose(sim=sim, object_id=ee_handle, respect_to=-1) # Pose matrix retrieved by CoppeliaSim
-        p_coppelia = world_T_ee_coppelia[0:3, 3]    
-
         # Compute the forward kinematics of the robot
         kinematic_chain = forward_kinematics(q=q, base_world_transform=world_T_0, dh_params=ur5_dh_params)
-        world_T_ee = kinematic_chain[-1]    # Pose matrix computed via FK        
+        
+        # Compute the Jacobian matrix
+        J = geometric_jacobian(kinematic_chain=kinematic_chain, q=q)
 
-        p_err_norm = np.linalg.norm(world_T_ee_coppelia[0:3, 3] - world_T_ee[0:3, 3])
-        or_err_norm = np.linalg.norm(world_T_ee_coppelia[0:3,0:3] - world_T_ee[0:3,0:3])
+        # Compute the EE velocity vector (6x1) via differential kinematics
+        v_ee_dk = J@np.array(dq)
+
+        v_ee_coppelia = get_object_velocity(sim=sim, handle=ee_handle)
 
         sim_history['time'][it] = it*sim_timestep
         sim_history['q'][it,:] = q
         sim_history['dq'][it,:] = dq
-        sim_history['pos_err_norm'][it] = p_err_norm
-        sim_history['or_err_norm'][it] = or_err_norm
+        sim_history['v_ee_dk'][it,:] = v_ee_dk
+        sim_history['v_ee_coppelia'][it,:] = v_ee_coppelia
 
         # Perform the simulation step
         sim.step()
@@ -76,11 +76,18 @@ if __name__=="__main__":
 
 
     # Plot some results
-    plt.figure()
-    plt.plot(sim_history['time'], sim_history['pos_err_norm'], label="Position")
-    plt.plot(sim_history['time'], sim_history['or_err_norm'], label="Orientation")
-    plt.grid(True)
-    plt.xlabel("Time [s]")
-    plt.ylabel("Error norm")
-    plt.legend()
+    plt.rcParams['text.usetex'] = True
+
+    labels = ["$v_{x}$", "$v_{y}$", "$v_{z}$", "$\omega_{\\alpha}$", "$\omega_{\\beta}$", "$\omega_{\gamma}$"]
+    fig, axes = plt.subplots(nrows=6, ncols=1, figsize = (6, 2*6))
+
+    for i in range(0, 6):
+        axes[i].plot(sim_history['time'], sim_history['v_ee_dk'][:, i], label="DK")
+        axes[i].plot(sim_history['time'], sim_history['v_ee_coppelia'][:,i], label="Coppelias")
+        axes[i].set(xlabel='Time [s]', ylabel=labels[i])
+        axes[i].grid(True)
+        axes[i].legend(loc="upper right")
+
+    plt.suptitle('EE Velocity', fontsize=18, fontweight="bold")
+    plt.tight_layout()
     plt.show()

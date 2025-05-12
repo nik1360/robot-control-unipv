@@ -30,3 +30,18 @@ def forward_kinematics( dh_params:list, q:list, base_world_transform:np.ndarray=
         kinematic_chain.append(T_i)
     
     return kinematic_chain   
+
+
+def geometric_jacobian(kinematic_chain:list, q:list) -> np.ndarray:
+    p_ee = kinematic_chain[-1][0:3, 3]   # Reale o aumentato
+
+    J = np.zeros((6,len(q)))
+
+    for i in range(0, 6):    # I giunti reali sono rotoidali
+        z_iminus1 = kinematic_chain[i][0:3, 2]
+        p_iminus1 = kinematic_chain[i][0:3, 3]
+        J[0:3, i] = np.cross(z_iminus1, (p_ee-p_iminus1))
+        J[3:6, i] = z_iminus1
+
+    return J
+    

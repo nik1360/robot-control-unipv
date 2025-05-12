@@ -6,6 +6,8 @@ perform some simulation steps.
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 from coppelia_utils import get_handles, get_joint_positions, get_joint_velocities
 
+COPPELIA_SCENE_PATH = "/home/nikolas/UNIPV/robot-control-unipv/coppelia_scenes/ur5_scene.ttt"       # NOTE: you have to put the absolute path!
+
 if __name__=="__main__":
 
     client = RemoteAPIClient()
@@ -14,7 +16,7 @@ if __name__=="__main__":
 
     # Load the simulation scenario using the .ttt file 
     # NOTE: you have to put the absolute path!
-    sim.loadScene("/home/nikolas/UNIPV/robot-control-unipv/coppelia_scenes/ur5_scene.ttt")
+    sim.loadScene(COPPELIA_SCENE_PATH)
 
     # In order to access to any object of the scene, one must know the ID (or handle)
     # The handle can be accessed knowing the obejct name

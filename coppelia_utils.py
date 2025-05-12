@@ -25,7 +25,9 @@ def get_joint_velocities(sim, joint_handles:list) -> list:
     return joint_velocities
 
 
-
+def get_object_velocity(sim, handle:int) -> np.ndarray:
+    linear, angular = sim.getVelocity(handle)
+    return np.array(linear+angular)    
 
 
 
