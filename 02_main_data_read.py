@@ -21,7 +21,8 @@ if __name__=="__main__":
     # In order to access to any object of the scene, one must know the ID (or handle)
     # The handle can be accessed knowing the obejct name
 
-    joint_names = ["/joint1", "/joint2", "/joint3", "/joint4", "/joint5", "/joint6"]    
+    joint_names = ["/UR5/joint{0}", "/UR5/joint{1}", "/UR5/joint{2}", "/UR5/joint{3}", 
+                   "/UR5/joint{4}", "/UR5/joint{5}"] 
     joint_handles = get_handles(sim=sim, names=joint_names)
 
     # Setup some simulation settings 

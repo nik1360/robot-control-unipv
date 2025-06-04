@@ -24,6 +24,11 @@ def get_joint_velocities(sim, joint_handles:list) -> list:
         joint_velocities.append(vel)
     return joint_velocities
 
+def set_joint_target_positions(sim, joint_handles:list, q_des:list):
+    assert len(joint_handles) == len(q_des)
+    for i in range(0, len(joint_handles)):
+        sim.setJointTargetPosition(joint_handles[i], q_des[i])
+
 
 def get_object_velocity(sim, handle:int) -> np.ndarray:
     linear, angular = sim.getVelocity(handle)
