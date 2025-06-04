@@ -27,15 +27,8 @@ if __name__ == "__main__":
     world_T_0[2,3] = world_T_0[2,3] - 0.01465   # This removes a small offset that is already taken care of in the DH params (must be done only for the UR5)
 
 
-    # Get the current joint position
+    # Get the current joint position, useful for the initialization of the IK algorithm
     q = get_joint_positions(sim=sim, joint_handles=joint_handles)
-
-
-    T_ee_coppelia = get_pose(sim, ee_handle, -1)
-    
-    kinematic_chain = forward_kinematics(q=q, base_world_transform=world_T_0, dh_params=ur5_dh_params)
-    world_T_ee = kinematic_chain[-1]    # Pose matrix computed via FK        
-
 
 
     # Define the desired pose 
@@ -47,8 +40,6 @@ if __name__ == "__main__":
                                        damping_factor=0.001, step_size=0.1, verbose=False)
 
     
-    # Compute the pose associated with the configuration retrieved from the ik
-    T_ee_ik = forward_kinematics(dh_params=ur5_dh_params, q=q_ik, base_world_transform=world_T_0)[-1]
 
 
     

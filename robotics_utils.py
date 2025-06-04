@@ -37,7 +37,7 @@ def geometric_jacobian(kinematic_chain:list, q:list) -> np.ndarray:
 
     J = np.zeros((6,len(q)))
 
-    for i in range(0, 6):    # I giunti reali sono rotoidali
+    for i in range(0, len(q)):    # I giunti reali sono rotoidali
         z_iminus1 = kinematic_chain[i][0:3, 2]
         p_iminus1 = kinematic_chain[i][0:3, 3]
         J[0:3, i] = np.cross(z_iminus1, (p_ee-p_iminus1))
@@ -99,7 +99,7 @@ def inverse_kinematics(dh_params:list, T_des:np.ndarray, q_first_guess:list, bas
         success = np.linalg.norm(pose_err)<conv_thresh
         stop = (it == max_iterations) or success
 
-        if it%10 ==0 and verbose: 
+        if it%100 ==0 and verbose: 
             print(f"It: {it} Err:{np.linalg.norm(pose_err):.5}" )
         it += 1
 
